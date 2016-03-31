@@ -24,12 +24,13 @@ http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee
 	}
 ]]></expression-component>
     </flow>
-    <flow name="retrieveOrders">
+    <flow name="main">
         <http:listener config-ref="HTTP_Listener_Configuration" path="/" doc:name="HTTP 8086"/>
-        <logger level="INFO" doc:name="Logger"/>
+        <flow-ref name="retrieveOrders" doc:name="retrieveOrders"/>
+        <flow-ref name="processOrders" doc:name="processOrders"/>
+    </flow>
+    <sub-flow name="retrieveOrders">
         <set-variable variableName="dateRange" value="#[message.inboundProperties.'http.query.params'.range]" doc:name="set dateRange"/>
-        <parse-template location="C:\Users\tmcginnis\AnypointStudio\advanced\order-system-tm\src\main\resources\orderRequest.xml" doc:name="Parse Template"/>
-        <ws:consumer config-ref="orderSoapService" operation="provisionOrder" doc:name="Web Service Consumer"/>
         <dw:transform-message doc:name="Transform Message">
             <dw:input-payload doc:sample="provisionOrderResponse.xml"/>
             <dw:set-payload><![CDATA[%dw 1.0
@@ -38,5 +39,7 @@ http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee
 ---
 payload.ns0#provisionOrderResponse.*return]]></dw:set-payload>
         </dw:transform-message>
-    </flow>
+        <ws:consumer config-ref="orderSoapService" operation="provisionOrder" doc:name="Web Service Consumer"/>
+        <parse-template location="C:\Users\tmcginnis\AnypointStudio\advanced\order-system-tm\src\main\resources\orderRequest.xml" doc:name="Parse Template"/>
+    </sub-flow>
 </mule>
